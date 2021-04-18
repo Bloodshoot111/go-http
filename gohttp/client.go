@@ -1,11 +1,13 @@
 package gohttp
 
+import "net/http"
+
 type Client interface {
-	Get()
-	Post()
-	Put()
-	Patch()
-	Delete()
+	Get(url string, headers http.Header) (*http.Response, error)
+	Post(url string, headers http.Header, body interface{}) (*http.Response, error)
+	Put(url string, headers http.Header, body interface{}) (*http.Response, error)
+	Patch(url string, headers http.Header, body interface{}) (*http.Response, error)
+	Delete(url string, headers http.Header) (*http.Response, error)
 }
 
 type httpClient struct {}
@@ -15,15 +17,25 @@ func New() Client {
 	return client
 }
 
-func (c* httpClient) Get(){}
+func (c* httpClient) Get(url string, headers http.Header) (*http.Response, error){
+	return c.do(http.MethodGet, headers, url, nil)
+}
 
-func (c* httpClient) Post(){}
+func (c* httpClient) Post(url string, headers http.Header, body interface{}) (*http.Response, error){
+	return c.do(http.MethodPost, headers, url, body)
+}
 
-func (c* httpClient) Put(){}
+func (c* httpClient) Put(url string, headers http.Header, body interface{}) (*http.Response, error){
+	return c.do(http.MethodPut, headers, url, body)
+}
 
-func (c* httpClient) Patch(){}
+func (c* httpClient) Patch(url string, headers http.Header, body interface{}) (*http.Response, error){
+	return c.do(http.MethodPatch, headers, url, body)
+}
 
-func (c* httpClient) Delete(){}
+func (c* httpClient) Delete(url string, headers http.Header) (*http.Response, error){
+	return c.do(http.MethodDelete, headers, url, nil)
+}
 
 
 
