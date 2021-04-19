@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/bloodshoot111/go-http/gohttp"
 	"io/ioutil"
+
+	"github.com/bloodshoot111/go-http/gohttp"
 )
 
 type User struct {
 	FirstName string `json:"first_name"`
-	LastName string `json:"last_name"`
+	LastName  string `json:"last_name"`
 }
 
 func main() {
@@ -44,4 +45,3 @@ func postTest(user User) {
 	bytes, _ := ioutil.ReadAll(response.Body)
 	fmt.Println(string(bytes))
 }
-
