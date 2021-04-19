@@ -2,6 +2,7 @@ package gohttp
 
 import (
 	"net/http"
+	"sync"
 )
 
 type Client interface {
@@ -16,6 +17,7 @@ type httpClient struct {
 	builder *clientBuilder
 
 	client *http.Client
+	clientOnce sync.Once
 }
 
 

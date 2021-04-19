@@ -42,18 +42,18 @@ func (c *httpClient) do(method string, headers http.Header ,url string, body int
 }
 
 func (c *httpClient) getHttpClient() *http.Client {
-	if c.client == nil {
-		c.client = &http.Client{
-			Timeout: defaultConnectionTimeout * defaultResponseTimeOut,
-			Transport: &http.Transport{
-				MaxIdleConnsPerHost:  c.getMaxIdleConnections(),
-				ResponseHeaderTimeout: c.getResponseTimeout(),
-				DialContext: (&net.Dialer{
-					Timeout: c.getConnectionTimeout(),
-				}).DialContext,
-			},
-		}
-	}
+	c.clientOnce.Do(func() {
+			c.client = &http.Client{
+				Timeout: defaultConnectionTimeout * defaultResponseTimeOut,
+				Transport: &http.Transport{
+					MaxIdleConnsPerHost:  c.getMaxIdleConnections(),
+					ResponseHeaderTimeout: c.getResponseTimeout(),
+					DialContext: (&net.Dialer{
+						Timeout: c.getConnectionTimeout(),
+					}).DialContext,
+				},
+			}
+	})
 	return c.client
 }
 
