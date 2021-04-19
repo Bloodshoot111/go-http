@@ -1,9 +1,16 @@
 package gohttp
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 type Client interface {
 	SetHeaders(headers http.Header)
+	SetConnectionTimeout(timeout time.Duration)
+	SetResponseTimeout(timeout time.Duration)
+	SetMaxIdleConnections(maxIdleConnections int)
+	DisableTimeouts(disable bool)
 	Get(url string, headers http.Header) (*http.Response, error)
 	Post(url string, headers http.Header, body interface{}) (*http.Response, error)
 	Put(url string, headers http.Header, body interface{}) (*http.Response, error)
@@ -12,6 +19,13 @@ type Client interface {
 }
 
 type httpClient struct {
+	client *http.Client
+
+	maxIdleConnections int
+	connectionTimeout time.Duration
+	responseTimeout time.Duration
+	disableTimeout bool
+
 	Headers http.Header
 }
 
@@ -19,9 +33,25 @@ func(c* httpClient) SetHeaders(headers http.Header){
 	c.Headers = headers
 }
 
+func(c* httpClient) SetConnectionTimeout(timeout time.Duration){
+	c.connectionTimeout = timeout
+}
+
+func(c* httpClient) SetResponseTimeout(timeout time.Duration){
+	c.responseTimeout = timeout
+}
+
+func(c* httpClient) SetMaxIdleConnections(maxIdleConnections int){
+	c.maxIdleConnections = maxIdleConnections
+}
+
+func(c* httpClient) DisableTimeouts(disable bool){
+	c.disableTimeout = disable
+}
+
 func New() Client {
-	client := &httpClient{}
-	return client
+	httpClient := &httpClient{}
+	return httpClient
 }
 
 func (c* httpClient) Get(url string, headers http.Header) (*http.Response, error){
