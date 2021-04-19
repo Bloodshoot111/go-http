@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/bloodshoot111/go-http/gomime"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"strings"
@@ -17,7 +18,7 @@ const(
 	defaultConnectionTimeout = 1 * time.Second
 )
 
-func (c *httpClient) do(method string, headers http.Header ,url string, body interface{}) (*http.Response, error) {
+func (c *httpClient) do(method string, headers http.Header ,url string, body interface{}) (*Response, error) {
 
 
 	fullHeaders :=  c.getRequestHeaders(headers)
@@ -38,7 +39,28 @@ func (c *httpClient) do(method string, headers http.Header ,url string, body int
 
 	client := c.getHttpClient()
 
-	return  client.Do(request)
+	response, err :=  client.Do(request)
+
+	if err != nil {
+		return nil, fmt.Errorf("error while sending the request: %w", err)
+	}
+
+	defer response.Body.Close()
+
+	responseBody, err := ioutil.ReadAll(response.Body)
+
+	if err != nil {
+		return nil, fmt.Errorf("error while parsing the responseBody: %w", err)
+	}
+
+	finalResponse := Response{
+		status: 	response.Status,
+		statusCode: response.StatusCode,
+		headers:    response.Header,
+		body:       responseBody,
+	}
+
+	return &finalResponse, nil
 }
 
 func (c *httpClient) getHttpClient() *http.Client {
