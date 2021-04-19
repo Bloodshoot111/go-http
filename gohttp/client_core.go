@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
+	"github.com/bloodshoot111/go-http/gomime"
 	"net"
 	"net/http"
 	"strings"
@@ -108,9 +109,9 @@ func (c* httpClient) getRequestBody(contentType string,body interface{}) ([]byte
 		return nil,nil
 	}
 	switch strings.ToLower(contentType) {
-	case "application/json":
+	case gomime.ContentTypeJson:
 		return json.Marshal(body)
-	case "application/xml":
+	case gomime.ContentTypeXml:
 		return xml.Marshal(body)
 	default:
 		return json.Marshal(body)
