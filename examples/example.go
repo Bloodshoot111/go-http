@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"time"
 
 	"github.com/bloodshoot111/go-http/gohttp"
@@ -33,10 +32,9 @@ func getTest() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(response.StatusCode)
+	fmt.Println(response.StatusCode())
 
-	bytes, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(string(bytes))
+	fmt.Println(response.String())
 }
 
 func postTest(user User) {
@@ -51,8 +49,7 @@ func postTest(user User) {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(response.StatusCode)
+	fmt.Println(response.StatusCode())
 
-	bytes, _ := ioutil.ReadAll(response.Body)
-	fmt.Println(string(bytes))
+	fmt.Println(response.String())
 }
