@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"time"
 
 	"github.com/bloodshoot111/go-http/gohttp"
 )
@@ -22,7 +23,12 @@ func main() {
 
 func getTest() {
 
-	client := gohttp.New()
+	client := gohttp.NewBuilder().
+		DisableTimeouts(false).
+		SetConnectionTimeout(10 * time.Second).
+		SetMaxIdleConnections(10).
+		SetResponseTimeout(5 * time.Second).
+		Build()
 	response, err := client.Get("https://api.github.com", nil)
 	if err != nil {
 		panic(err)
@@ -35,7 +41,12 @@ func getTest() {
 
 func postTest(user User) {
 
-	client := gohttp.New()
+	client := gohttp.NewBuilder().
+		DisableTimeouts(false).
+		SetConnectionTimeout(10 * time.Second).
+		SetMaxIdleConnections(10).
+		SetResponseTimeout(5 * time.Second).
+		Build()
 	response, err := client.Post("https://api.github.com", nil, user)
 	if err != nil {
 		panic(err)
