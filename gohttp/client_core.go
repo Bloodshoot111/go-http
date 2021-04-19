@@ -135,8 +135,19 @@ func (c* httpClient) getRequestBody(contentType string,body interface{}) ([]byte
 		return json.Marshal(body)
 	case gomime.ContentTypeXml:
 		return xml.Marshal(body)
+	case gomime.ContentTypeOctetStream:
+		return prepareOctetStream(body)
 	default:
 		return json.Marshal(body)
 	}
 
+}
+
+func prepareOctetStream(body interface{}) ([]byte,error) {
+	file, err := ioutil.ReadFile(fmt.Sprintf("%v", body))
+	if err != nil {
+		return nil, fmt.Errorf("unable to load file for octet-stream: %w", err)
+	}
+
+	return file,nil
 }
