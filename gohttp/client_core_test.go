@@ -1,6 +1,7 @@
 package gohttp
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 )
@@ -75,6 +76,19 @@ func TestGetRequestBody(t *testing.T){
 
 		if string(body) != `<string>one</string><string>two</string>` {
 			t.Error("invalid xml body obtained")
+		}
+	})
+
+	t.Run("BodyWithOctetStream", func(t *testing.T) {
+		requestBody := []string {"testFile.txt"}
+		body, err := client.getRequestBody("application/octet-stream",requestBody)
+
+		if err != nil {
+			t.Error("no error expected when passing a valid body")
+		}
+		fmt.Println(string(body))
+		if string(body) != `This is a testFile` {
+			t.Error("invalid octet-stream body obtained")
 		}
 	})
 

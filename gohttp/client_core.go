@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"github.com/bloodshoot111/go-http/gomime"
 	"io/ioutil"
@@ -144,7 +145,11 @@ func (c* httpClient) getRequestBody(contentType string,body interface{}) ([]byte
 }
 
 func prepareOctetStream(body interface{}) ([]byte,error) {
-	file, err := ioutil.ReadFile(fmt.Sprintf("%v", body))
+	s, ok := body.([]string)
+	if !ok {
+		return nil, errors.New("not a valid file path for octet-stream request")
+	}
+	file, err := ioutil.ReadFile(s[0])
 	if err != nil {
 		return nil, fmt.Errorf("unable to load file for octet-stream: %w", err)
 	}
