@@ -6,6 +6,8 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/bloodshoot111/go-http/core"
+	"github.com/bloodshoot111/go-http/gohttp_mock"
 	"github.com/bloodshoot111/go-http/gomime"
 	"io/ioutil"
 	"net"
@@ -19,63 +21,61 @@ const(
 	defaultConnectionTimeout = 1 * time.Second
 )
 
-func (c *httpClient) do(method string, headers http.Header ,url string, body interface{}) (*Response, error) {
-
-
-	fullHeaders :=  c.getRequestHeaders(headers)
+func (c *httpClient) do(method string, url string, headers http.Header, body interface{}) (*core.Response, error) {
+	fullHeaders := c.getRequestHeaders(headers)
 
 	requestBody, err := c.getRequestBody(fullHeaders.Get("Content-Type"), body)
-
 	if err != nil {
-		return nil, fmt.Errorf("error while parsing the requestBody: %w", err)
+		return nil, err
 	}
 
 	request, err := http.NewRequest(method, url, bytes.NewBuffer(requestBody))
-
 	if err != nil {
-		return nil, fmt.Errorf("error while creating the request: %w", err)
+		return nil, errors.New("unable to create a new request")
 	}
 
 	request.Header = fullHeaders
 
-	client := c.getHttpClient()
-
-	response, err :=  client.Do(request)
-
+	response, err := c.getHttpClient().Do(request)
 	if err != nil {
-		return nil, fmt.Errorf("error while sending the request: %w", err)
+		return nil, err
 	}
 
 	defer response.Body.Close()
-
 	responseBody, err := ioutil.ReadAll(response.Body)
-
 	if err != nil {
-		return nil, fmt.Errorf("error while parsing the responseBody: %w", err)
+		return nil, err
 	}
 
-	finalResponse := Response{
-		status: 	response.Status,
-		statusCode: response.StatusCode,
-		headers:    response.Header,
-		body:       responseBody,
+	finalResponse := core.Response{
+		Status:     response.Status,
+		StatusCode: response.StatusCode,
+		Headers:    response.Header,
+		Body:       responseBody,
 	}
-
 	return &finalResponse, nil
 }
 
-func (c *httpClient) getHttpClient() *http.Client {
+func (c *httpClient) getHttpClient() core.HttpClient {
+	if gohttp_mock.MockupServer.IsEnabled() {
+		return gohttp_mock.MockupServer.GetMockedClient()
+	}
+
 	c.clientOnce.Do(func() {
-			c.client = &http.Client{
-				Timeout: defaultConnectionTimeout * defaultResponseTimeOut,
-				Transport: &http.Transport{
-					MaxIdleConnsPerHost:  c.getMaxIdleConnections(),
-					ResponseHeaderTimeout: c.getResponseTimeout(),
-					DialContext: (&net.Dialer{
-						Timeout: c.getConnectionTimeout(),
-					}).DialContext,
-				},
-			}
+		if c.builder.client != nil {
+			c.client = c.builder.client
+			return
+		}
+		c.client = &http.Client{
+			Timeout: c.getConnectionTimeout() + c.getResponseTimeout(),
+			Transport: &http.Transport{
+				MaxIdleConnsPerHost:   c.getMaxIdleConnections(),
+				ResponseHeaderTimeout: c.getResponseTimeout(),
+				DialContext: (&net.Dialer{
+					Timeout: c.getConnectionTimeout(),
+				}).DialContext,
+			},
+		}
 	})
 	return c.client
 }
@@ -88,7 +88,7 @@ func (c *httpClient) getMaxIdleConnections() int {
 }
 
 func (c *httpClient) getResponseTimeout() time.Duration {
-	if c.builder.disableTimeout {
+	if c.builder.disableTimeouts {
 		return 0
 	}
 	if c.builder.responseTimeout > 0 {
@@ -98,7 +98,7 @@ func (c *httpClient) getResponseTimeout() time.Duration {
 }
 
 func (c *httpClient) getConnectionTimeout() time.Duration {
-	if c.builder.disableTimeout {
+	if c.builder.disableTimeouts {
 		return 0
 	}
 	if c.builder.connectionTimeout > 0 {
@@ -107,25 +107,6 @@ func (c *httpClient) getConnectionTimeout() time.Duration {
 	return defaultConnectionTimeout
 }
 
-func (c *httpClient) getRequestHeaders(headers http.Header) http.Header {
-	result := make(http.Header)
-
-	// Add common headers to the request:
-	for header, value := range c.builder.headers {
-		if len(value) > 0 {
-			result.Set(header, value[0])
-		}
-	}
-
-	// Add custom headers to the request:
-	for header, value := range headers {
-		if len(value) > 0 {
-			result.Set(header, value[0])
-		}
-
-	}
-	return result
-}
 
 func (c* httpClient) getRequestBody(contentType string,body interface{}) ([]byte,error){
 	if body == nil {
